@@ -49,4 +49,10 @@ int fs_write(int fd, void *data, int len);
 int fs_read(int fd, void *data, int len);
 void fs_ls();
 
+// Extra Credit: Additional Commands
+void fs_stat(char *name);       /* Print detailed file metadata */
+int  fs_rename(char *old_name, char *new_name); /* Rename a file */
+int  fs_seek(int fd, int pos);  /* Set read position for a file descriptor */
+void fs_bitmap();               /* Display the free-space bitmap visually */
+
 #endif
