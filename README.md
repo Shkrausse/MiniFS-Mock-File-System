@@ -1,29 +1,48 @@
-# MiniFS - Contiguous Allocation File System
+# MiniFS – Mock File System
 
-MiniFS is a modular C implementation of a small file system that uses a virtual disk image (`disk.img`) for storage. It utilizes **contiguous allocation** rather than indexed allocation, meaning each file occupies a solid, unbroken physical region of the disk.
+A simplified block-based file system written in C that simulates core OS file-system
+concepts using a virtual disk image (`disk.img`).
 
-## 1. System Specifications
-* **Virtual Disk:** 64 Blocks
-* **Block Size:** 256 Bytes
-* **Max Files:** 8
-* **File Reservation:** 2 blocks (512 bytes) per file
-* **Disk Size:** 16,384 bytes (16 KB)
+---
 
-## 2. Virtual Disk Layout
-MiniFS divides the `disk.img` into the following blocks:
-* **Block 0:** Superblock (Magic number and FS metadata)
-* **Block 1:** Free-space Bitmap (Tracks used/free blocks)
-* **Blocks 2–3:** File Table / Directory Entries
-* **Blocks 4–63:** File Data Area
+## Files
 
-## 3. Project Files
-* `minifs.h`: Header file containing structs for the Superblock, File Entries, and Open File Table.
-* `minifs.c`: Core logic implementation (formatting, mounting, allocation, reading/writing).
-* `main.c`: Interactive command-driven shell.
-* `driver.c`: Automated demonstration program (meets Part 6 requirements).
-* `Makefile`: Script to automate the compilation of both programs.
+| File | Purpose |
+|------|---------|
+| `minifs.h` | Shared header: structs, constants, and function prototypes |
+| `minifs.c` | Core file-system implementation |
+| `main.c` | Interactive MiniFS shell |
+| `driver.c` | Automated demonstration program |
+| `Makefile` | Build script |
 
-## 4. Compilation Instructions
-To build both the interactive shell and the demonstration driver, run:
+---
+
+## Disk Layout
+
+| Block(s) | Contents |
+|----------|---------|
+| 0 | Superblock (magic number, block size, total blocks, max files) |
+| 1 | Free-space bitmap (1 byte per block; 1 = allocated, 0 = free) |
+| 2–3 | File table / directory entries (up to 8 FileEntry structs) |
+| 4–63 | File data area (available for file content) |
+
+- **Block size**: 256 bytes  
+- **Total blocks**: 64  
+- **Max files**: 8  
+- **Max file size**: 512 bytes (2 contiguous blocks per file)
+
+---
+
+## How to Compile
+
 ```bash
-make all
+make
+```
+
+This produces two executables:
+- `minifs_shell` – the interactive command-line shell
+- `minifs_driver` – the automated demonstration program
+
+To clean build artifacts:
+
+```bash
