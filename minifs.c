@@ -178,3 +178,105 @@ void fs_ls() {
     }
     printf("-----------------\n");
 }
+
+/* ---------------------------------------------------------------
+ * Extra Credit: stat - Print detailed metadata for a named file
+ * --------------------------------------------------------------- */
+void fs_stat(char *name) {
+    for (int i = 0; i < MAX_FILES; i++) {
+        if (directory[i].in_use && strcmp(directory[i].name, name) == 0) {
+            printf("\n--- stat: %s ---\n", name);
+            printf("  Directory slot : %d\n", i);
+            printf("  In use         : %s\n", directory[i].in_use ? "yes" : "no");
+            printf("  File size      : %d bytes\n", directory[i].size_bytes);
+            printf("  Start block    : %d\n", directory[i].start_block);
+            printf("  Blocks reserved: %d\n", directory[i].num_blocks);
+            printf("  Max capacity   : %d bytes\n", MAX_FILE_SIZE);
+            printf("  Space used     : %d / %d bytes\n",
+                   directory[i].size_bytes, MAX_FILE_SIZE);
+            return;
+        }
+    }
+    printf("stat: file '%s' not found.\n", name);
+}
+
+/* ---------------------------------------------------------------
+ * Extra Credit: rename - Rename a file (must not be open)
+ * --------------------------------------------------------------- */
+int fs_rename(char *old_name, char *new_name) {
+    /* Prevent renaming to a name that already exists */
+    for (int i = 0; i < MAX_FILES; i++) {
+        if (directory[i].in_use && strcmp(directory[i].name, new_name) == 0) {
+            printf("Error: A file named '%s' already exists.\n", new_name);
+            return -1;
+        }
+    }
+
+    for (int i = 0; i < MAX_FILES; i++) {
+        if (directory[i].in_use && strcmp(directory[i].name, old_name) == 0) {
+            /* Prevent renaming an open file */
+            for (int j = 0; j < MAX_OPEN_FILES; j++) {
+                if (open_table[j].in_use && open_table[j].entry_index == i) {
+                    printf("Error: Cannot rename an open file.\n");
+                    return -1;
+                }
+            }
+            strncpy(directory[i].name, new_name, 32);
+            directory[i].name[31] = '\0'; /* ensure null termination */
+            return 0;
+        }
+    }
+    printf("rename: file '%s' not found.\n", old_name);
+    return -1;
+}
+
+/* ---------------------------------------------------------------
+ * Extra Credit: seek - Set the read position for a file descriptor
+ * --------------------------------------------------------------- */
+int fs_seek(int fd, int pos) {
+    if (fd < 0 || fd >= MAX_OPEN_FILES || !open_table[fd].in_use) {
+        printf("Error: Invalid file descriptor.\n");
+        return -1;
+    }
+    FileEntry *fe = &directory[open_table[fd].entry_index];
+    if (pos < 0 || pos > fe->size_bytes) {
+        printf("Error: Seek position %d out of range (0-%d).\n",
+               pos, fe->size_bytes);
+        return -1;
+    }
+    open_table[fd].read_pos = pos;
+    return 0;
+}
+
+/* ---------------------------------------------------------------
+ * Extra Credit: bitmap - Display the free-space bitmap visually
+ * --------------------------------------------------------------- */
+void fs_bitmap() {
+    printf("\n--- Free-Space Bitmap (%d blocks, block size %d bytes) ---\n",
+           TOTAL_BLOCKS, BLOCK_SIZE);
+    printf("  Legend: [#] = allocated, [.] = free\n\n");
+
+    /* Print column indices header */
+    printf("     ");
+    for (int c = 0; c < 16; c++) printf("%2d ", c);
+    printf("\n");
+
+    /* Print bitmap rows of 16 blocks each */
+    for (int row = 0; row < TOTAL_BLOCKS / 16; row++) {
+        printf("%3d: ", row * 16);
+        for (int col = 0; col < 16; col++) {
+            int blk = row * 16 + col;
+            printf("[%c] ", bitmap[blk] ? '#' : '.');
+        }
+        printf("\n");
+    }
+
+    /* Count free blocks */
+    int free_count = 0;
+    for (int i = 0; i < TOTAL_BLOCKS; i++) {
+        if (!bitmap[i]) free_count++;
+    }
+    printf("\n  Free blocks: %d / %d  (%d bytes available)\n",
+           free_count, TOTAL_BLOCKS, free_count * BLOCK_SIZE);
+    printf("--------------------------------------------------------\n");
+}
