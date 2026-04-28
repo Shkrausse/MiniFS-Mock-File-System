@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g
-LIB_OBJS = minifs.o
+LIB_OBJS = minifs.0
 
 # Build both executables
 all: minifs_shell minifs_driver
